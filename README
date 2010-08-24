@@ -2,4 +2,27 @@ Sql lite helper is a python script that generates automatically a dbadapter clas
 
 You need to provide it an input file with the description of the classes that you are going to store in sqlite
 
+The structure of the input file is:
+CLASS ClassName
+JavaType	FieldName
+ENDCLASS
+
+At the moment the only supported types are String, Float, Long and Date
+You can put more than one class in the same file.
+
+
+The usage is pretty simple. Provide the input file, the name of the class you want to create and the name of the package you want the class to belong to.
+
+  -h, --help            show this help message and exit
+  -i INFILE, --infile=INFILE
+                        file that contains classes definition
+  -n NAME, --name=NAME  name of the dbhelper class
+  -p PACKAGE, --package=PACKAGE
+                        name of the package
+
+
+ie:
+python sql_lite_helper.py -i sample.txt -n MyDbAdapter -p com.fede
+
+
 If you have any issue or question  please contact me at fedepaol@gmail.com
