@@ -1,0 +1,11 @@
+CLASS Event
+String Description
+Date Time	
+String ShortDesc
+ENDCLASS
+
+CLASS Call
+String Number
+Date Time
+ENDCLASS
+
