@@ -1,0 +1,5 @@
+Sql lite helper is a python script that generates automatically a dbadapter class useful for sqlite interaction in android.
+
+You need to provide it an input file with the description of the classes that you are going to store in sqlite
+
+If you have any issue or question  please contact me at fedepaol@gmail.com
