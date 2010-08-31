@@ -17,7 +17,9 @@ from optparse import OptionParser
 
 type_dictionary = { 'String':'text',
                     'Float':'float',
+                    'Double':'real',
                     'Long':'integer',
+                    'Integer':'integer',
                     'Date':'integer'}
 
 class ClassField():
