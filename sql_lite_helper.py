@@ -736,13 +736,13 @@ class ClassImplementer():
         return ',\n\t\t'.join(res)
 
     def build_get_all_function(self):
-        function_sign = 'public Cursor getAll%s()'%(self._name)
+        function_sign = 'public static Cursor getAll%s()'%(self._name)
         keys = self.get_keys_array()
         function_body = '\treturn mDb.query(%s, new String[] {%s}, null, null, null, null, null);'%(self.table_name, keys)
         return self.get_function(function_sign, function_body)
 
     def build_get_one_function(self):
-        function_sign = 'public Cursor get%s(long rowIndex)'%(self._name)
+        function_sign = 'public static Cursor get%s(long rowIndex)'%(self._name)
         keys = self.get_keys_array()
         where = '%s + " = " + rowIndex'%(self._row_id)
         function_body = '\tCursor res = mDb.query(%s, new String[] {%s}, %s, null, null, null, null);\n'%(self.table_name, keys, where) + '\tif(res != null){\n\t\tres.moveToFirst();\n\t}\n\treturn res;'
@@ -750,45 +750,44 @@ class ClassImplementer():
 
 
     def build_update_content_function(self, provider_name):
-        function_sign = 'public int update%s(long rowId, '%(self._name) +  self.get_arg_fields_list() + ', Context c)'
+        function_sign = 'public static int update%s(long rowId, '%(self._name) +  self.get_arg_fields_list() + ', Context c)'
         function_body = self.get_content_values_provider(provider_name) +\
                         '\n\tUri rowURI = ContentUris.withAppendedId(%s.%s_URI, rowId); \n\n\
-    String where = null;\n\
-    String whereArgs[] = null;\n\n\
-    ContentResolver cr = c.getContentResolver();\n\
-    int updatedRowCount = cr.update(rowURI, contentValues, where, whereArgs);\n\
-    return updatedRowCount;'%(provider_name, self._name.upper())
+\tString where = null;\n\
+\tString whereArgs[] = null;\n\n\
+\tContentResolver cr = c.getContentResolver();\n\
+\tint updatedRowCount = cr.update(rowURI, contentValues, where, whereArgs);\n\
+\treturn updatedRowCount;'%(provider_name, self._name.upper())
 
         return self.get_function(function_sign, function_body)
 
 
     def build_get_one_content_function(self, provider_name):
-        function_sign = 'public Cursor get%s(long rowId, Context c)'%(self._name)
+        function_sign = 'public static Cursor get%s(long rowId, Context c)'%(self._name)
 
         function_body = '\tContentResolver cr = c.getContentResolver();\n\
-    String[] result_columns = new String[] {\n\
-    %s  };\n\n\
-    Uri rowAddress = ContentUris.withAppendedId(%s.%s_URI, rowId);\n\n\
-    String where = null;    \n\
-    String whereArgs[] = null;\n\
-    String order = null;\n\n\
-    Cursor resultCursor = cr.query(rowAddress, result_columns, where, whereArgs, order);\n\
-    return resultCursor;'%(self.get_columns_from_content_provider(provider_name), provider_name, self._name.upper())
+\tString[] result_columns = new String[] {\n\
+\t%s  };\n\n\
+\tUri rowAddress = ContentUris.withAppendedId(%s.%s_URI, rowId);\n\n\
+\tString where = null;    \n\
+\tString whereArgs[] = null;\n\
+\tString order = null;\n\n\
+\tCursor resultCursor = cr.query(rowAddress, result_columns, where, whereArgs, order);\n\
+\treturn resultCursor;'%(self.get_columns_from_content_provider(provider_name), provider_name, self._name.upper())
 
         return self.get_function(function_sign, function_body)
 
     def build_get_all_content_function(self, provider_name):
-        function_sign = 'public Cursor getAll%s(Context c)'%(self._name)
+        function_sign = 'public static Cursor getAll%s(Context c)'%(self._name)
 
-        function_body = '\
-    ContentResolver cr = c.getContentResolver();\n\
-    String[] result_columns = new String[] {\n\
-    %s  }; \n\n\
-    String where = null;    \n\
-    String whereArgs[] = null;\n\
-    String order = null;\n\n\
-    Cursor resultCursor = cr.query(%s.%s_URI, result_columns, where, whereArgs, order);\n\
-    return resultCursor;'%(self.get_columns_from_content_provider(provider_name), provider_name, self._name.upper())
+        function_body = '\tContentResolver cr = c.getContentResolver();\n\
+\tString[] result_columns = new String[] {\n\
+\t%s  }; \n\n\
+\tString where = null;    \n\
+\tString whereArgs[] = null;\n\
+\tString order = null;\n\n\
+\tCursor resultCursor = cr.query(%s.%s_URI, result_columns, where, whereArgs, order);\n\
+\treturn resultCursor;'%(self.get_columns_from_content_provider(provider_name), provider_name, self._name.upper())
 
         return self.get_function(function_sign, function_body)
 
@@ -800,7 +799,7 @@ class ClassImplementer():
         return 'SINGLE_%s'%(self._name.upper())
 
     def build_content_add_function(self, provider_name):
-        function_sign = 'public Uri add%s('%(self._name) +  self.get_arg_fields_list() + ', Context c)'
+        function_sign = 'public static Uri add%s('%(self._name) +  self.get_arg_fields_list() + ', Context c)'
         function_body = self.get_content_values_provider(provider_name) +\
         '\tContentResolver cr = c.getContentResolver();\n\treturn cr.insert(%s.%s_URI, contentValues);'%(provider_name, self._name.upper())
 
@@ -808,16 +807,16 @@ class ClassImplementer():
 
 
     def build_content_remove_function(self, provider_name):
-        function_sign = 'public int remove%s(long rowIndex, Context c)'%self._name
+        function_sign = 'public static int remove%s(long rowIndex, Context c)'%self._name
         function_body = '\tContentResolver cr = c.getContentResolver();\n\
-    Uri rowAddress = ContentUris.withAppendedId(%s.%s_URI, rowIndex);\
-        return cr.delete(rowAddress, null, null);'%(provider_name, self._name.upper())
+\tUri rowAddress = ContentUris.withAppendedId(%s.%s_URI, rowIndex);\n\
+\treturn cr.delete(rowAddress, null, null);'%(provider_name, self._name.upper())
         return self.get_function(function_sign, function_body)
 
     def build_content_remove_all_function(self, provider_name):
-        function_sign = 'public int removeAll%s(Context c)'%(self._name)
+        function_sign = 'public static int removeAll%s(Context c)'%(self._name)
         function_body = '\tContentResolver cr = c.getContentResolver();\n\
-    return cr.delete(%s.%s_URI, null, null);'%(provider_name, self._name.upper())
+\treturn cr.delete(%s.%s_URI, null, null);'%(provider_name, self._name.upper())
         return self.get_function(function_sign, function_body)
 
 
