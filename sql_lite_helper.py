@@ -855,7 +855,7 @@ if __name__ == '__main__':
 
     if opt.cprovider:
         target_file = open('%s.java'%(opt.cprovider), 'w')
-        helper.write_content_provider(target_file, opt.package, opt.package, opt.cprovider, opt.dbname)   #FIXME
+        helper.write_content_provider(target_file, opt.authority, opt.package, opt.cprovider, opt.dbname)   #FIXME
         target_file.close()
 
         target_file = open('%sClient.java'%(opt.cprovider), 'w')
