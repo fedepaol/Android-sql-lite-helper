@@ -1,7 +1,10 @@
 SQLite Helper
 =========
 
-Python script to automatically generate code sqlite helper file for android AND/OR content provider code.
+Still Beta. Please report any issues you might have.
+
+
+Python 2.x script to automatically generate code sqlite helper file for android AND/OR content provider code.
 
 You can generate the sqlite helper class in case you do not need a content provider, or the content provider with a companion client class made of static methods.
 
