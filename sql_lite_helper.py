@@ -207,6 +207,7 @@ CONTENT_QUERY = '''\t@Override
         // Execute the query.
         Cursor cursor = queryBuilder.query(db, projection, selection,
                 selectionArgs, groupBy, having, sortOrder);
+        cursor.setNotificationUri(getContext().getContentResolver(), uri);
 
         // Return the result Cursor.
         return cursor;
@@ -246,6 +247,7 @@ CONTENT_INSERT = '''\t@Override
         if (id > -1) {
             Uri insertedId = ContentUris.withAppendedId(getContentUriFromUri(uri), id);
                                 getContext().getContentResolver().notifyChange(insertedId, null);
+            getContext().getContentResolver().notifyChange(insertedId, null);
             return insertedId;
         } else {
             return null;
