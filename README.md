@@ -12,9 +12,11 @@ Data description
 You need to provide it an input file with the description of the data model you want to generate the code after
 
 The structure of the input file is:
+    
     CLASS ClassName
     JavaType        FieldName
     ENDCLASS
+
 
     CLASS ClassName1
     Date      BirthDate
@@ -74,11 +76,11 @@ optional arguments:
 
 
 ie:
-python sql_lite_helper.py -i sample.txt -n MyDbAdapter -p com.fede
+>python sql_lite_helper.py -i sample.txt -n MyDbAdapter -p com.fede
 
 or
 
-python sql_lite_helper.py -i sample.txt -p com.fede -a com.fede.dbprovider -c DroidContentProvider
+>python sql_lite_helper.py -i sample.txt -p com.fede -a com.fede.dbprovider -c DroidContentProvider
 to generate the content provider as well
 
 ----
