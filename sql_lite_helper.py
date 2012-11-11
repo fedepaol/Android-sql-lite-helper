@@ -148,17 +148,30 @@ import android.text.TextUtils;
 import android.util.Log;'''
 
 
+CONTENT_CLIENT_IMPORT = '''
+import android.content.ContentResolver;
+import android.content.ContentUris;
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.Cursor;
+import android.net.Uri;
+
+import java.util.Date;'''
+
+
 
 CONTENT_CLASS_CREATION = '''public class %s extends ContentProvider {
     private static final String DATABASE_NAME = "%sDb.db";
-    private static final int DATABASE_VERSION = 1;'''
+    private static final int DATABASE_VERSION = 1;
+    private static final String TAG = "%s";
+    '''
 
 CONTENT_SQL_CREATION = '''
-    private MySQLiteOpenHelper myOpenHelper;
+    private MyDbHelper myOpenHelper;
 
     @Override
     public boolean onCreate() {
-        myOpenHelper = new MySQLiteOpenHelper(getContext(), DATABASE_NAME, null, DATABASE_VERSION);
+        myOpenHelper = new MyDbHelper(getContext(), DATABASE_NAME, null, DATABASE_VERSION);
         return true;
     }'''
 
@@ -366,40 +379,40 @@ class SqlLiteHelper():
 
 
     def write_get_table_name_from_uri(self, target_file):
-        target_file.write('''/**
-* Returns the right table name for the given uri
-* @param uri
-* @return
-*/
-private String getTableNameFromUri(Uri uri){
-    switch (uriMatcher.match(uri)) {''')
+        target_file.write('''\t/**
+    * Returns the right table name for the given uri
+    * @param uri
+    * @return
+    */
+    private String getTableNameFromUri(Uri uri){
+        switch (uriMatcher.match(uri)) {\n''')
 
         for single_class in self._classes:
-            target_file.write('\t\tcase %s:'%(single_class.get_allcontent_type))
-            target_file.write('\t\tcase %s:'%(single_class.get_single_content_type ))
-            target_file.write('\t\t\treturn %s'%(single_class.table_name))
+            target_file.write('\t\t\tcase %s:\n'%(single_class.get_allcontent_type()))
+            target_file.write('\t\t\tcase %s:\n'%(single_class.get_singlecontent_type()))
+            target_file.write('\t\t\t\treturn %s;\n'%(single_class.table_name))
 
-        target_file.write('''default: break;
+        target_file.write('''\t\t\tdefault: break;
         }
 
         return null;
     }''')
 
     def write_get_content_uri_from_uri(self, target_file):
-        target_file.write('''/**
-* Returns the right table name for the given uri
-* @param uri
-* @return
-*/
-private String getTableNameFromUri(Uri uri){
-    switch (uriMatcher.match(uri)) {''')
+        target_file.write('''\t/**
+    * Returns the parent uri for the given uri
+    * @param uri
+    * @return
+    */
+    private Uri getContentUriFromUri(Uri uri){
+        switch (uriMatcher.match(uri)) {\n''')
 
         for single_class in self._classes:
-            target_file.write('\t\tcase %s:'%(single_class.get_allcontent_type))
-            target_file.write('\t\tcase %s:'%(single_class.get_single_content_type ))
-            target_file.write('\t\t\treturn %s_URI'%(single_class._name.upper()))
+            target_file.write('\t\t\tcase %s:\n'%(single_class.get_allcontent_type()))
+            target_file.write('\t\t\tcase %s:\n'%(single_class.get_singlecontent_type()))
+            target_file.write('\t\t\t\treturn %s_URI;\n'%(single_class._name.upper()))
 
-        target_file.write('''default: break;
+        target_file.write('''\t\t\tdefault: break;
         }
 
         return null;
@@ -517,7 +530,7 @@ private String getTableNameFromUri(Uri uri){
         target_file.write('package %s;\n\n'%(package))
         target_file.write(CONTENT_IMPORTMODULES)
         self.write_separators(target_file)
-        target_file.write(CONTENT_CLASS_CREATION%(name, dbname))
+        target_file.write(CONTENT_CLASS_CREATION%(name, dbname, name))
         self.write_separators(target_file)
 
         self.write_uris(target_file, auth)
@@ -531,11 +544,15 @@ private String getTableNameFromUri(Uri uri){
         self.write_separators(target_file)
         self.write_create_tables(target_file)
         target_file.write(CONTENT_SQL_CREATION)
+        self.write_separators(target_file)
 
+        self.write_get_table_name_from_uri(target_file)
+        self.write_separators(target_file)
+
+        self.write_get_content_uri_from_uri(target_file)
         self.write_separators(target_file)
 
         target_file.write(CONTENT_QUERY%(self.get_single_cases()))
-
         self.write_separators(target_file)
 
         self.write_get_type(target_file, package)
@@ -557,7 +574,7 @@ private String getTableNameFromUri(Uri uri){
         print 'writing content provider client: Authority %s Package %s Name %s DbName %s'%(auth, package, name, dbname)
         target_file.write(SQL_BANNER)
         target_file.write('package %s;\n\n'%(package))
-        target_file.write(CONTENT_IMPORTMODULES)
+        target_file.write(CONTENT_CLIENT_IMPORT)
         self.write_separators(target_file)
         target_file.write(CONTENT_CLIENT_CLASS_CREATION%(name))
 
@@ -733,22 +750,22 @@ class ClassImplementer():
 
 
     def build_update_content_function(self, provider_name):
-        function_sign = 'public Uri update%s(long rowId, '%(self._name) +  self.get_arg_fields_list() + ')'
+        function_sign = 'public int update%s(long rowId, '%(self._name) +  self.get_arg_fields_list() + ', Context c)'
         function_body = self.get_content_values_provider(provider_name) +\
                         '\n\tUri rowURI = ContentUris.withAppendedId(%s.%s_URI, rowId); \n\n\
     String where = null;\n\
     String whereArgs[] = null;\n\n\
     ContentResolver cr = c.getContentResolver();\n\
-    int updatedRowCount = cr.update(rowURI, updatedValues, where, whereArgs);\n\
-    return updatedRowCount;'
+    int updatedRowCount = cr.update(rowURI, contentValues, where, whereArgs);\n\
+    return updatedRowCount;'%(provider_name, self._name.upper())
 
         return self.get_function(function_sign, function_body)
 
 
     def build_get_one_content_function(self, provider_name):
-        function_sign = 'public Cursor get%s(long rowId)'%(self._name)
+        function_sign = 'public Cursor get%s(long rowId, Context c)'%(self._name)
 
-        function_body = '\tContentResolver cr = getContentResolver();\n\
+        function_body = '\tContentResolver cr = c.getContentResolver();\n\
     String[] result_columns = new String[] {\n\
     %s  };\n\n\
     Uri rowAddress = ContentUris.withAppendedId(%s.%s_URI, rowId);\n\n\
@@ -761,10 +778,10 @@ class ClassImplementer():
         return self.get_function(function_sign, function_body)
 
     def build_get_all_content_function(self, provider_name):
-        function_sign = 'public Cursor getAll%s()'%(self._name)
+        function_sign = 'public Cursor getAll%s(Context c)'%(self._name)
 
         function_body = '\
-    ContentResolver cr = getContentResolver();\n\
+    ContentResolver cr = c.getContentResolver();\n\
     String[] result_columns = new String[] {\n\
     %s  }; \n\n\
     String where = null;    \n\
@@ -783,7 +800,7 @@ class ClassImplementer():
         return 'SINGLE_%s'%(self._name.upper())
 
     def build_content_add_function(self, provider_name):
-        function_sign = 'public Uri add%s('%(self._name) +  self.get_arg_fields_list() + ')'
+        function_sign = 'public Uri add%s('%(self._name) +  self.get_arg_fields_list() + ', Context c)'
         function_body = self.get_content_values_provider(provider_name) +\
         '\tContentResolver cr = c.getContentResolver();\n\treturn cr.insert(%s.%s_URI, contentValues);'%(provider_name, self._name.upper())
 
@@ -793,14 +810,14 @@ class ClassImplementer():
     def build_content_remove_function(self, provider_name):
         function_sign = 'public int remove%s(long rowIndex, Context c)'%self._name
         function_body = '\tContentResolver cr = c.getContentResolver();\n\
-        Uri rowAddress = ContentUris.withAppendedId(%s.%s_URI, _rowIndex);\
+    Uri rowAddress = ContentUris.withAppendedId(%s.%s_URI, rowIndex);\
         return cr.delete(rowAddress, null, null);'%(provider_name, self._name.upper())
         return self.get_function(function_sign, function_body)
 
     def build_content_remove_all_function(self, provider_name):
-        function_sign = 'public boolean removeAll%s(Context c)'%(self._name)
+        function_sign = 'public int removeAll%s(Context c)'%(self._name)
         function_body = '\tContentResolver cr = c.getContentResolver();\n\
-        return cr.delete(%s.%s_URI, null, null);'%(provider_name, self._name.upper())
+    return cr.delete(%s.%s_URI, null, null);'%(provider_name, self._name.upper())
         return self.get_function(function_sign, function_body)
 
 
@@ -814,7 +831,8 @@ def parse_options():
     parser.add_argument('-i', '--infile', dest='infile', help='file that contains classes definition', default='in.txt')
     parser.add_argument('-db', '--dbhelper', dest='name', help='name of the dbhelper class ')
     parser.add_argument('-p', '--package', dest='package', help='name of the package', default='')
-    parser.add_argument('-d', '--dbname', dest='dbname', help='name of the database file', default='dbhelper')
+    parser.add_argument('-a', '--authority', dest='authority', help='name of the authority of the content provider', default='')
+    parser.add_argument('-d', '--dbname', dest='dbname', help='name of the database file', default='dbFile')
     parser.add_argument('-c', '--cprovider', dest='cprovider', help='to enable generation of content provider')
     args = parser.parse_args()
     return args
@@ -845,4 +863,9 @@ if __name__ == '__main__':
 
         helper.write_content_provider_client(target_file, opt.package, opt.package, opt.cprovider, opt.dbname)   #FIXME
         target_file.close()
+        print 'Just remember to add :'
+        print '<provider android:name=".%s"\n\
+        android:authorities="%s"\n />'%(opt.cprovider, opt.authority)
+
+        print 'To your manifest file'
 
