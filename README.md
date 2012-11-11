@@ -12,16 +12,16 @@ Data description
 You need to provide it an input file with the description of the data model you want to generate the code after
 
 The structure of the input file is:
-`CLASS ClassName'
-'JavaType        FieldName'
-'ENDCLASS`
+    CLASS ClassName
+    JavaType        FieldName
+    ENDCLASS
 
-`CLASS ClassName1'
-'Date      BirthDate'
-'String    Name'
-'String    Surname'
-'double     weight'
-ENDCLASS`
+    CLASS ClassName1
+    Date      BirthDate
+    String    Name
+    String    Surname
+    double     Weight
+    ENDCLASS
 
 
 At the moment the only supported types are 
@@ -43,9 +43,8 @@ Usage
 
 The usage is pretty simple. Provide the input file, the name of the class you want to create and the name of the package you want the class to belong to.
 
-sql_lite_helper.py [-h] [-name NAME] [-i INFILE] [-db NAME]
-\[-p PACKAGE] [-a AUTHORITY] [-d DBNAME]
-                          [-c CPROVIDER]
+
+    sql_lite_helper.py [-h] [-name NAME] [-i INFILE] [-db NAME] [-p PACKAGE] [-a AUTHORITY] [-d DBNAME] [-c CPROVIDER]
 
 Generates sqlite helper or content provider. The name of content provider
 triggers the generation of the content provider as well
