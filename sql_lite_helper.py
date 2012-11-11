@@ -825,9 +825,9 @@ class ClassImplementer():
 
 
 def parse_options():
-    parser = argparse.ArgumentParser(description='Generates sqlite helper or content provider.')
+    parser = argparse.ArgumentParser(description='Generates sqlite helper or content provider.\nThe name of content provider triggers the generation of the content provider as well')
 
-    parser.add_argument('-name', '--name', dest='name', help='Name of the class', default='Provider')
+    parser.add_argument('-name', '--name', dest='name', help='Name of the dbhelper class', default='DbHelper')
     parser.add_argument('-i', '--infile', dest='infile', help='file that contains classes definition', default='in.txt')
     parser.add_argument('-db', '--dbhelper', dest='name', help='name of the dbhelper class ')
     parser.add_argument('-p', '--package', dest='package', help='name of the package', default='')
