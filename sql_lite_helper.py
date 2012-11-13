@@ -53,7 +53,7 @@ import android.util.Log;
 
 import java.util.Date;'''
 
-ROW_ID = '''	public static final String ROW_ID = "_id";'''
+ROW_ID = '''    public static final String ROW_ID = "_id";'''
 
 
 SQL_BANNER = '''/**********************************************************************************************************************************************************************
@@ -164,7 +164,7 @@ CONTENT_CLASS_CREATION = '''public class %s extends ContentProvider {
     private static final String DATABASE_NAME = "%sDb.db";
     private static final int DATABASE_VERSION = 1;
     private static final String TAG = "%s";
-    '''
+'''
 
 CONTENT_SQL_CREATION = '''
     private MyDbHelper myOpenHelper;
@@ -177,7 +177,7 @@ CONTENT_SQL_CREATION = '''
 
 CONTENT_QUERY = '''\t@Override
     public Cursor query(Uri uri, String[] projection, String selection,
-                        String[] selectionArgs, String sortOrder) {
+        String[] selectionArgs, String sortOrder) {
 
         // Open thedatabase.
         SQLiteDatabase db;
@@ -206,8 +206,8 @@ CONTENT_QUERY = '''\t@Override
 
         // Execute the query.
         Cursor cursor = queryBuilder.query(db, projection, selection,
-                selectionArgs, groupBy, having, sortOrder);
-        cursor.setNotificationUri(getContext().getContentResolver(), uri);
+                    selectionArgs, groupBy, having, sortOrder);
+            cursor.setNotificationUri(getContext().getContentResolver(), uri);
 
         // Return the result Cursor.
         return cursor;
@@ -218,11 +218,9 @@ CONTENT_DELETE = '''\t@Override
         SQLiteDatabase db = myOpenHelper.getWritableDatabase();
 
         switch (uriMatcher.match(uri)) {
-        %s
+%s
                 String rowID = uri.getPathSegments().get(1);
-                selection = ROW_ID + "=" + rowID
-                        + (!TextUtils.isEmpty(selection) ?
-                        " AND (" + selection + ')' : "");
+                selection = ROW_ID + "=" + rowID + (!TextUtils.isEmpty(selection) ?  " AND (" + selection + ')' : "");
             default: break;
         }
 
@@ -238,7 +236,7 @@ CONTENT_DELETE = '''\t@Override
         return deleteCount;
     }'''
 
-CONTENT_INSERT = '''\t@Override
+CONTENT_INSERT = '''    @Override
     public Uri insert(Uri uri, ContentValues values) {
         SQLiteDatabase db = myOpenHelper.getWritableDatabase();
         String nullColumnHack = null;
@@ -254,7 +252,7 @@ CONTENT_INSERT = '''\t@Override
         }
     }'''
 
-CONTENT_UPDATE = '''\t@Override
+CONTENT_UPDATE = '''    @Override
     public int update(Uri uri, ContentValues values, String selection,
                       String[] selectionArgs) {
 
@@ -283,8 +281,8 @@ CONTENT_CLIENT_CLASS_CREATION = '''public class %sClient{'''
 
 
 def add_indentation(function):
-    indent = function.replace('\n', '\n\t')
-    return '\t' + indent 
+    indent = function.replace('\n', '\n    ')
+    return '    ' + indent 
 
 class SqlLiteHelper():
     '''Parses a Class file and produces a Java file with the sqlite helper class'''
@@ -328,21 +326,21 @@ class SqlLiteHelper():
         
     def write_create_tables(self, target_file):
         ''' writes table creation statements'''
-        target_file.write('\t// -------- TABLES CREATION ----------')
+        target_file.write('    // -------- TABLES CREATION ----------')
         self.write_separators(target_file)
 
         for single_class in self._classes:
-            target_file.write('\t// %s CREATION \n'%(single_class._name))
-            target_file.write('\t' + single_class.get_table_create())
+            target_file.write('    // %s CREATION \n'%(single_class._name))
+            target_file.write('    ' + single_class.get_table_create())
             self.write_separators(target_file)
 
 
     def write_static_constants(self, target_file, is_content_provider = False):
         ''' writes static constant statements for each class'''
         for single_class in self._classes:
-            target_file.write('\t// -------------- %s DEFINITIONS ------------\n\n'%(single_class._name.upper()))
+            target_file.write('    // -------------- %s DEFINITIONS ------------\n\n'%(single_class._name.upper()))
             declarations = single_class.get_static_declaration_fields()
-            decl = '\t' + '\n\t'.join(declarations) + '\n'
+            decl = '    ' + '\n    '.join(declarations) + '\n'
             target_file.write(decl)
 
             if is_content_provider:
@@ -357,31 +355,31 @@ class SqlLiteHelper():
 
     def write_uris(self, target_file, authority):
         '''write static constant uris'''
-        target_file.write('\t// -------------- URIS ------------\n\n')
+        target_file.write('    // -------------- URIS ------------\n\n')
         for single_class in self._classes:
             uri = single_class.get_uri(authority)
             target_file.write(add_indentation(uri) + '\n')
 
 
     def write_uri_matcher(self, target_file, authority):
-        start = '''\tprivate static final UriMatcher uriMatcher;
+        start = '''     private static final UriMatcher uriMatcher;
     static {
         uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);\n'''
 
         target_file.write(start)
 
         for single_class in self._classes:
-            target_file.write('''\t\turiMatcher.addURI("%s", "%s", %s);\n'''%(\
+            target_file.write('''        uriMatcher.addURI("%s", "%s", %s);\n'''%(\
                 authority, single_class._name.lower(), single_class.get_allcontent_type()))
-            target_file.write('''\t\turiMatcher.addURI("%s", "%s/#", %s);\n'''%(\
+            target_file.write('''        uriMatcher.addURI("%s", "%s/#", %s);\n'''%(\
                 authority, single_class._name.lower(), single_class.get_singlecontent_type()))
 
-        target_file.write('\t}')
+        target_file.write('    }')
 
 
 
     def write_get_table_name_from_uri(self, target_file):
-        target_file.write('''\t/**
+        target_file.write('''    /**
     * Returns the right table name for the given uri
     * @param uri
     * @return
@@ -390,14 +388,14 @@ class SqlLiteHelper():
         switch (uriMatcher.match(uri)) {\n''')
 
         for single_class in self._classes:
-            target_file.write('\t\t\tcase %s:\n'%(single_class.get_allcontent_type()))
-            target_file.write('\t\t\tcase %s:\n'%(single_class.get_singlecontent_type()))
-            target_file.write('\t\t\t\treturn %s;\n'%(single_class.table_name))
+            target_file.write('            case %s:\n'%(single_class.get_allcontent_type()))
+            target_file.write('            case %s:\n'%(single_class.get_singlecontent_type()))
+            target_file.write('                return %s;\n'%(single_class.table_name))
 
-        target_file.write('''\t\t\tdefault: break;
+        target_file.write('''            default: break;
         }
 
-        return null;
+           return null;
     }''')
 
     def write_get_content_uri_from_uri(self, target_file):
@@ -410,11 +408,11 @@ class SqlLiteHelper():
         switch (uriMatcher.match(uri)) {\n''')
 
         for single_class in self._classes:
-            target_file.write('\t\t\tcase %s:\n'%(single_class.get_allcontent_type()))
-            target_file.write('\t\t\tcase %s:\n'%(single_class.get_singlecontent_type()))
-            target_file.write('\t\t\t\treturn %s_URI;\n'%(single_class._name.upper()))
+            target_file.write('            case %s:\n'%(single_class.get_allcontent_type()))
+            target_file.write('            case %s:\n'%(single_class.get_singlecontent_type()))
+            target_file.write('                return %s_URI;\n'%(single_class._name.upper()))
 
-        target_file.write('''\t\t\tdefault: break;
+        target_file.write('''            default: break;
         }
 
         return null;
@@ -425,9 +423,9 @@ class SqlLiteHelper():
     def get_single_cases(self):
         res = []
         for single_class in self._classes[:-1]:
-            res.append('\t\t\tcase %s:\n'%(single_class.get_singlecontent_type()))
+            res.append('            case %s:\n'%(single_class.get_singlecontent_type()))
 
-        res.append('\t\t\tcase %s:'%(self._classes[-1].get_singlecontent_type()))
+        res.append('            case %s:'%(self._classes[-1].get_singlecontent_type()))
 
         return ''.join(res)
 
@@ -508,21 +506,21 @@ class SqlLiteHelper():
         return ''.join(rows)
 
     def write_get_type(self, target_file, package):
-        target_file.write('''\t@Override
+        target_file.write('''    @Override
     public String getType(Uri uri) {
-     // Return a string that identifies the MIME type
-     // for a Content Provider URI
+        // Return a string that identifies the MIME type
+        // for a Content Provider URI
         switch (uriMatcher.match(uri)) {\n''')
 
         for single_class in self._classes:
-            target_file.write('\t\t\tcase %s:\n'%(single_class.get_allcontent_type()))
-            target_file.write('\t\t\t\treturn "vnd.android.cursor.dir/vnd.%s.%s";\n'%(package, single_class._name.lower()))
-            target_file.write('\t\t\tcase %s:\n'%(single_class.get_singlecontent_type()))
-            target_file.write('\t\t\t\treturn "vnd.android.cursor.dir/vnd.%s.%s";\n'%(package, single_class._name.lower()))
+            target_file.write('            case %s:\n'%(single_class.get_allcontent_type()))
+            target_file.write('                return "vnd.android.cursor.dir/vnd.%s.%s";\n'%(package, single_class._name.lower()))
+            target_file.write('            case %s:\n'%(single_class.get_singlecontent_type()))
+            target_file.write('                return "vnd.android.cursor.dir/vnd.%s.%s";\n'%(package, single_class._name.lower()))
 
-        target_file.write('''\t\t\tdefault:
+        target_file.write('''            default:
                 throw new IllegalArgumentException("Unsupported URI: " + uri);
-        }
+            }
     }''')
 
 
@@ -660,9 +658,9 @@ class ClassImplementer():
 
     def get_content_types(self):
         global content_type_id
-        all_type = '\tprivate static final int %s= %d;'%(self.get_allcontent_type(), content_type_id)
+        all_type = '    private static final int %s= %d;'%(self.get_allcontent_type(), content_type_id)
         content_type_id += 1
-        single_type = '\tprivate static final int %s= %d;'%(self.get_singlecontent_type(), content_type_id)
+        single_type = '    private static final int %s= %d;'%(self.get_singlecontent_type(), content_type_id)
         content_type_id += 1
         return '\n'.join([all_type, single_type])
 
@@ -754,12 +752,12 @@ class ClassImplementer():
     def build_update_content_function(self, provider_name):
         function_sign = 'public static int update%s(long rowId, '%(self._name) +  self.get_arg_fields_list() + ', Context c)'
         function_body = self.get_content_values_provider(provider_name) +\
-                        '\n\tUri rowURI = ContentUris.withAppendedId(%s.%s_URI, rowId); \n\n\
-\tString where = null;\n\
-\tString whereArgs[] = null;\n\n\
-\tContentResolver cr = c.getContentResolver();\n\
-\tint updatedRowCount = cr.update(rowURI, contentValues, where, whereArgs);\n\
-\treturn updatedRowCount;'%(provider_name, self._name.upper())
+                        '\n    Uri rowURI = ContentUris.withAppendedId(%s.%s_URI, rowId); \n\n\
+    String where = null;\n\
+    String whereArgs[] = null;\n\n\
+    ContentResolver cr = c.getContentResolver();\n\
+    int updatedRowCount = cr.update(rowURI, contentValues, where, whereArgs);\n\
+    return updatedRowCount;'%(provider_name, self._name.upper())
 
         return self.get_function(function_sign, function_body)
 
