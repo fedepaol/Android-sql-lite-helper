@@ -175,7 +175,7 @@ CONTENT_SQL_CREATION = '''
         return true;
     }'''
 
-CONTENT_QUERY = '''\t@Override
+CONTENT_QUERY = '''    @Override
     public Cursor query(Uri uri, String[] projection, String selection,
         String[] selectionArgs, String sortOrder) {
 
@@ -213,7 +213,7 @@ CONTENT_QUERY = '''\t@Override
         return cursor;
     }'''
 
-CONTENT_DELETE = '''\t@Override
+CONTENT_DELETE = '''    @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
         SQLiteDatabase db = myOpenHelper.getWritableDatabase();
 
@@ -362,7 +362,7 @@ class SqlLiteHelper():
 
 
     def write_uri_matcher(self, target_file, authority):
-        start = '''     private static final UriMatcher uriMatcher;
+        start = '''    private static final UriMatcher uriMatcher;
     static {
         uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);\n'''
 
@@ -670,22 +670,22 @@ class ClassImplementer():
 
     def get_content_values_provider(self, provider_name):
         ''' returns the list of command needed to declare a content values variable named contentValues on the stack, filled with all the fields of the class'''
-        content_values_fill = '\tContentValues contentValues = new ContentValues();\n'
+        content_values_fill = ' ContentValues contentValues = new ContentValues();\n'
         for field in self._class_fields:
             if field.type != 'Date':
-                content_values_fill = content_values_fill + '\tcontentValues.put(%s.%s, %s);\n'%(provider_name, field.key_name, field.name)
+                content_values_fill = content_values_fill + '   contentValues.put(%s.%s, %s);\n'%(provider_name, field.key_name, field.name)
             else:
-                content_values_fill = content_values_fill + '\tcontentValues.put(%s.%s, %s.getTime());\n'%(provider_name, field.key_name, field.name)
+                content_values_fill = content_values_fill + '   contentValues.put(%s.%s, %s.getTime());\n'%(provider_name, field.key_name, field.name)
         return content_values_fill
 
     def get_content_values(self):
         ''' returns the list of command needed to declare a content values variable named contentValues on the stack, filled with all the fields of the class'''
-        content_values_fill = '\tContentValues contentValues = new ContentValues();\n'
+        content_values_fill = ' ContentValues contentValues = new ContentValues();\n'
         for field in self._class_fields:
             if field.type != 'Date':
-                content_values_fill = content_values_fill + '\tcontentValues.put(%s, %s);\n'%(field.key_name, field.name)
+                content_values_fill = content_values_fill + '   contentValues.put(%s, %s);\n'%(field.key_name, field.name)
             else:
-                content_values_fill = content_values_fill + '\tcontentValues.put(%s, %s.getTime());\n'%(field.key_name, field.name)
+                content_values_fill = content_values_fill + '   contentValues.put(%s, %s.getTime());\n'%(field.key_name, field.name)
         return content_values_fill
 
     def get_arg_fields_list(self):
@@ -702,30 +702,31 @@ class ClassImplementer():
         args = 'long rowIndex, ' + self.get_arg_fields_list()
         function_sign = function_sign + args + ')'
 
-        function_body = '\tString where = %s + " = " + rowIndex;\n'%(self._row_id) + \
-        self.get_content_values() + '\treturn mDb.update(%s, contentValues, where, null);\n'%(self.table_name)
+        function_body = '   String where = %s + " = " + rowIndex;\n'%(self._row_id) + \
+        self.get_content_values() + '   return mDb.update(%s, contentValues, where, null);\n'%(self.table_name)
         return self.get_function(function_sign, function_body)
 
     def build_add_function(self):
         function_sign = 'public long add%s('%(self._name)
         function_args = self.get_arg_fields_list()
         function_sign = function_sign + function_args + ')'
-        function_body = self.get_content_values() + '\treturn mDb.insert(%s, null, contentValues);\n'%(self.table_name)
+        function_body = self.get_content_values() + '   return mDb.insert(%s, null, contentValues);\n'%(self.table_name)
         return self.get_function(function_sign, function_body)
 
     def build_remove_function(self):
         function_sign = 'public boolean remove%s(long rowIndex)'%self._name
-        function_body = '\treturn mDb.delete(%s, %s + " = " + rowIndex, null) > 0;'%(self.table_name, self._row_id)
+        function_body = '   return mDb.delete(%s, %s + " = " + rowIndex, null) > 0;'%(self.table_name, self._row_id)
         return self.get_function(function_sign, function_body)
 
     def build_remove_all_function(self):
         function_sign = 'public boolean removeAll%s()'%(self._name)
-        function_body = '\treturn mDb.delete(%s, null, null) > 0;'%(self.table_name)
+        function_body = '   return mDb.delete(%s, null, null) > 0;'%(self.table_name)
         return self.get_function(function_sign, function_body)
 
     def get_keys_array(self):
         ''' returs all the _KEY fields (the names of the columns) separated by , useful when I need to get the results of a cursor'''
-        return '\n\t\t\t\t' + self._row_id + ',\n\t\t\t\t' + ',\n\t\t\t\t'.join(field.key_name for field in self._class_fields)
+        return '\n              ' + self._row_id + \
+                ',\n                ' + ',\n                '.join(field.key_name for field in self._class_fields)
 
     def get_columns_from_content_provider(self, provider_name):
         res = ['\t%s.%s'%(provider_name, self._row_id)]
@@ -766,14 +767,14 @@ class ClassImplementer():
         function_sign = 'public static Cursor get%s(long rowId, Context c)'%(self._name)
 
         function_body = '\tContentResolver cr = c.getContentResolver();\n\
-\tString[] result_columns = new String[] {\n\
-\t%s  };\n\n\
-\tUri rowAddress = ContentUris.withAppendedId(%s.%s_URI, rowId);\n\n\
-\tString where = null;    \n\
-\tString whereArgs[] = null;\n\
-\tString order = null;\n\n\
-\tCursor resultCursor = cr.query(rowAddress, result_columns, where, whereArgs, order);\n\
-\treturn resultCursor;'%(self.get_columns_from_content_provider(provider_name), provider_name, self._name.upper())
+    String[] result_columns = new String[] {\n\
+    %s  };\n\n\
+    Uri rowAddress = ContentUris.withAppendedId(%s.%s_URI, rowId);\n\n\
+    String where = null;    \n\
+    String whereArgs[] = null;\n\
+    String order = null;\n\n\
+    Cursor resultCursor = cr.query(rowAddress, result_columns, where, whereArgs, order);\n\
+    return resultCursor;'%(self.get_columns_from_content_provider(provider_name), provider_name, self._name.upper())
 
         return self.get_function(function_sign, function_body)
 
@@ -781,13 +782,13 @@ class ClassImplementer():
         function_sign = 'public static Cursor getAll%s(Context c)'%(self._name)
 
         function_body = '\tContentResolver cr = c.getContentResolver();\n\
-\tString[] result_columns = new String[] {\n\
-\t%s  }; \n\n\
-\tString where = null;    \n\
-\tString whereArgs[] = null;\n\
-\tString order = null;\n\n\
-\tCursor resultCursor = cr.query(%s.%s_URI, result_columns, where, whereArgs, order);\n\
-\treturn resultCursor;'%(self.get_columns_from_content_provider(provider_name), provider_name, self._name.upper())
+    String[] result_columns = new String[] {\n\
+    %s  }; \n\n\
+    String where = null;    \n\
+    String whereArgs[] = null;\n\
+    String order = null;\n\n\
+    Cursor resultCursor = cr.query(%s.%s_URI, result_columns, where, whereArgs, order);\n\
+    return resultCursor;'%(self.get_columns_from_content_provider(provider_name), provider_name, self._name.upper())
 
         return self.get_function(function_sign, function_body)
 
@@ -808,15 +809,15 @@ class ClassImplementer():
 
     def build_content_remove_function(self, provider_name):
         function_sign = 'public static int remove%s(long rowIndex, Context c)'%self._name
-        function_body = '\tContentResolver cr = c.getContentResolver();\n\
-\tUri rowAddress = ContentUris.withAppendedId(%s.%s_URI, rowIndex);\n\
-\treturn cr.delete(rowAddress, null, null);'%(provider_name, self._name.upper())
+        function_body = '   ContentResolver cr = c.getContentResolver();\n\
+    Uri rowAddress = ContentUris.withAppendedId(%s.%s_URI, rowIndex);\n\
+    return cr.delete(rowAddress, null, null);'%(provider_name, self._name.upper())
         return self.get_function(function_sign, function_body)
 
     def build_content_remove_all_function(self, provider_name):
         function_sign = 'public static int removeAll%s(Context c)'%(self._name)
-        function_body = '\tContentResolver cr = c.getContentResolver();\n\
-\treturn cr.delete(%s.%s_URI, null, null);'%(provider_name, self._name.upper())
+        function_body = '   ContentResolver cr = c.getContentResolver();\n\
+    return cr.delete(%s.%s_URI, null, null);'%(provider_name, self._name.upper())
         return self.get_function(function_sign, function_body)
 
 
