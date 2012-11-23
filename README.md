@@ -1,12 +1,20 @@
 SQLite Helper
 =========
 
+*Describe your data and generate the content provider automagically*
+
 Still Beta. Please report any issues you might have.
 
 
 Python 2.x script to automatically generate code sqlite helper file for android AND/OR content provider code.
 
 You can generate the sqlite helper class in case you do not need a content provider, or the content provider with a companion client class made of static methods.
+
+Writing a content provider is boring, and it often include writing a lot of boilerplate code. 
+
+Even if there are a couple of fully working orms for android, using a content provider is the suggested and only way to export your data to other apps. 
+Moreover, it makes your life easier if you want to take advantage of content observer and / or a loader. 
+
 
 
 Data description
