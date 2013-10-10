@@ -62,7 +62,6 @@ SQL_BANNER = '''/***************************************************************
 '''
 
 SQL_CLASS_CREATION = '''public class %s{
-    
     private static final String TAG = "%s";
 
     private static final String DATABASE_NAME = "%sDb.db";
@@ -304,14 +303,12 @@ class SqlLiteHelper():
         self.write_separators(target_file)
         target_file.write(SQL_CLASS_CREATION%(name, name, dbname))
         self.write_separators(target_file)
-
         target_file.write(SQL_GENERIC_METHODS%(name, name))
-
         self.write_separators(target_file)
-
+        target_file.write(ROW_ID)
+        self.write_separators(target_file)
         self.write_static_constants(target_file)
         self.write_separators(target_file)
-
         self.write_create_tables(target_file)
         self.write_separators(target_file)
 
@@ -737,13 +734,13 @@ class ClassImplementer():
         return ',\n\t\t'.join(res)
 
     def build_get_all_function(self):
-        function_sign = 'public static Cursor getAll%s()'%(self._name)
+        function_sign = 'public Cursor getAll%s()'%(self._name)
         keys = self.get_keys_array()
         function_body = '\treturn mDb.query(%s, new String[] {%s}, null, null, null, null, null);'%(self.table_name, keys)
         return self.get_function(function_sign, function_body)
 
     def build_get_one_function(self):
-        function_sign = 'public static Cursor get%s(long rowIndex)'%(self._name)
+        function_sign = 'public Cursor get%s(long rowIndex)'%(self._name)
         keys = self.get_keys_array()
         where = '%s + " = " + rowIndex'%(self._row_id)
         function_body = '\tCursor res = mDb.query(%s, new String[] {%s}, %s, null, null, null, null);\n'%(self.table_name, keys, where) + '\tif(res != null){\n\t\tres.moveToFirst();\n\t}\n\treturn res;'
