@@ -65,7 +65,7 @@ SQL_CLASS_CREATION = '''public class %s{
     private static final String TAG = "%s";
 
     private static final String DATABASE_NAME = "%sDb.db";
-    private static final int DATABASE_VERSION = 1;'''
+    private static final int DATABASE_VERSION = %s;'''
 
 SQL_GENERIC_METHODS = '''
     // Variable to hold the database instance
@@ -161,7 +161,7 @@ import java.util.Date;'''
 
 CONTENT_CLASS_CREATION = '''public class %s extends ContentProvider {
     private static final String DATABASE_NAME = "%sDb.db";
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = %s;
     private static final String TAG = "%s";
 '''
 
@@ -295,13 +295,13 @@ class SqlLiteHelper():
             if values[0] == 'CLASS':
                 self._classes.append(ClassImplementer(file, values[1]))
 
-    def write_dbadapter(self, target_file, name, pckg, dbname):
+    def write_dbadapter(self, target_file, name, pckg, dbname, dbversion):
         print 'writing'
         target_file.write(SQL_BANNER)
         target_file.write('package %s;\n\n'%(pckg))
         target_file.write(SQL_IMPORTMODULES)
         self.write_separators(target_file)
-        target_file.write(SQL_CLASS_CREATION%(name, name, dbname))
+        target_file.write(SQL_CLASS_CREATION%(name, name, dbname, dbversion))
         self.write_separators(target_file)
         target_file.write(SQL_GENERIC_METHODS%(name, name))
         self.write_separators(target_file)
@@ -521,13 +521,13 @@ class SqlLiteHelper():
     }''')
 
 
-    def write_content_provider(self, target_file, auth, package, name, dbname):
+    def write_content_provider(self, target_file, auth, package, name, dbname, dbversion):
         print 'writing content provider : Authority %s Package %s Name %s DbName %s'%(auth, package, name, dbname)
         target_file.write(SQL_BANNER)
         target_file.write('package %s;\n\n'%(package))
         target_file.write(CONTENT_IMPORTMODULES)
         self.write_separators(target_file)
-        target_file.write(CONTENT_CLASS_CREATION%(name, dbname, name))
+        target_file.write(CONTENT_CLASS_CREATION%(name, dbname, dbversion, name))
         self.write_separators(target_file)
 
         self.write_uris(target_file, auth)
@@ -831,6 +831,7 @@ def parse_options():
     parser.add_argument('-a', '--authority', dest='authority', help='name of the authority of the content provider', default='')
     parser.add_argument('-d', '--dbname', dest='dbname', help='name of the database file', default='dbFile')
     parser.add_argument('-c', '--cprovider', dest='cprovider', help='to enable generation of content provider')
+    parser.add_argument('-v', '--version', dest='dbversion', help='version of the database - to be used to upgrade the database', default='1')
     args = parser.parse_args()
     return args
 
@@ -848,12 +849,13 @@ if __name__ == '__main__':
     helper = SqlLiteHelper(infile)
     if opt.name:
         target_file = open('%s.java'%(opt.name), 'w')
-        helper.write_dbadapter(target_file, opt.name, opt.package, opt.dbname)
+        helper.write_dbadapter(target_file, opt.name, opt.package, opt.dbname, opt.dbversion)
         target_file.close()
 
     if opt.cprovider:
         target_file = open('%s.java'%(opt.cprovider), 'w')
-        helper.write_content_provider(target_file, opt.authority, opt.package, opt.cprovider, opt.dbname)   #FIXME
+        print opt
+        helper.write_content_provider(target_file, opt.authority, opt.package, opt.cprovider, opt.dbname, opt.dbversion)
         target_file.close()
 
         target_file = open('%sClient.java'%(opt.cprovider), 'w')
