@@ -1,0 +1,167 @@
+/**********************************************************************************************************************************************************************
+****** AUTO GENERATED FILE BY ANDROID SQLITE HELPER SCRIPT BY FEDERICO PAOLINELLI. ANY CHANGE WILL BE WIPED OUT IF THE SCRIPT IS PROCESSED AGAIN. *******
+**********************************************************************************************************************************************************************/
+package {{ package }};
+
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.Cursor;
+import android.database.SQLException;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+import android.database.sqlite.SQLiteDatabase.CursorFactory;
+import android.util.Log;
+
+import java.util.Date;
+
+public class {{ name }}DbHelper {
+    private static final String TAG = "{{ name }}";
+
+    private static final String DATABASE_NAME = "{{ name }}.db";
+    private static final int DATABASE_VERSION = {{ dbversion }};
+
+
+    // Variable to hold the database instance
+    protected SQLiteDatabase mDb;
+    // Context of the application using the database.
+    private final Context mContext;
+    // Database open/upgrade helper
+    private DbHelper mDbHelper;
+    
+    public {{ name }}DbHelper(Context context) {
+        mContext = context;
+        mDbHelper = new DbHelper(mContext, DATABASE_NAME, null, DATABASE_VERSION);
+    }
+    
+    public {{ name }}DbHelper open() throws SQLException { 
+        mDb = mDbHelper.getWritableDatabase();
+        return this;
+    }
+                                                     
+    public void close() {
+        mDb.close();
+    }
+
+    public static final String ROW_ID = "_id";
+
+    {% for table in tables %}
+    // -------------- {{ table.upper_name }} DEFINITIONS ------------
+    public static final String {{ table.table_name }} = "{{ table.name }}";
+    {% for field in table.fields %}
+    public static final String {{ field.key_name }} = "{{ field.name }}";
+    public static final int {{ field.column_name }} = {{ loop.index }};
+    {% endfor %}
+    {% endfor %}
+
+
+    // -------- TABLES CREATION ----------
+
+    {% for table in tables %}
+    // {{ table.name }} CREATION 
+    private static final String DATABASE_{{ table.upper_name}}_CREATE = "create table " + {{ table.upper_name }}_TABLE + " (" +
+                                "_id integer primary key autoincrement, " +
+                                {% for field in table.fields -%}
+                                {{ field.key_name }} + " {{ field.sql_lite_type }}{{', ' if not loop.last }}" +
+                                {% endfor -%}
+                                ")";
+    {% endfor %}
+
+    {% for table in tables %}
+    // ----------------{{ table.name }} HELPERS -------------------- 
+    public long add{{ table.name }} ( {%- for field in table.fields -%} 
+                                      {{ field.type }} {{ field.name }}{{ ', ' if not loop.last }} 
+                                      {%- endfor %}) {
+        ContentValues contentValues = new ContentValues();
+        {% for field in table.fields -%}
+        {% if field.type == 'Date' -%}
+        contentValues.put({{ field.key_name }}, {{field.name}}.getTime());
+        {% else -%}
+        contentValues.put({{ field.key_name }}, {{field.name}});
+        {% endif %}
+        {%- endfor -%}
+        return mDb.insert({{ table.upper_name}}_TABLE, null, contentValues);
+    }
+
+    public long update{{ table.name }} (long rowIndex, {%- for field in table.fields -%} 
+                                      {{ field.type }} {{ field.name }}{{ ', ' if not loop.last }} 
+                                      {%- endfor %}) {
+        String where = ROW_ID + " = " + rowIndex;
+        ContentValues contentValues = new ContentValues();
+        {% for field in table.fields -%}
+        {% if field.type == 'Date' -%}
+        contentValues.put({{ field.key_name }}, {{field.name}}.getTime());
+        {% else -%}
+        contentValues.put({{ field.key_name }}, {{field.name}});
+        {% endif %}
+        {%- endfor -%}
+        return mDb.update({{ table.upper_name }}_TABLE, contentValues, where, null);
+    }
+
+    public boolean remove{{ table.name }}(long rowIndex){
+        return mDb.delete({{table.upper_name }}_TABLE, ROW_ID + " = " + rowIndex, null) > 0;
+    }
+
+    public boolean removeAll{{table.name}}(){
+        return mDb.delete({{table.upper_name }}_TABLE, null, null) > 0;
+    }
+
+    public Cursor getAll{{table.name}}(){
+    	return mDb.query({{table.upper_name }}_TABLE, new String[] {
+                         ROW_ID,
+                         {% for field in table.fields -%} 
+                         {{ field.key_name }}{{ ',' if not loop.last }}
+                         {% endfor %}}, null, null, null, null, null);
+    }
+
+    public Cursor get{{table.name}}(long rowIndex) {
+        Cursor res = mDb.query({{table.upper_name }}_TABLE, new String[] {
+                                ROW_ID,
+                                {% for field in table.fields -%} 
+                                {{ field.key_name }}{{ ',' if not loop.last }}
+                                {% endfor %}}, ROW_ID + " = " + rowIndex, null, null, null, null);
+
+        if(res != null){
+            res.moveToFirst();
+        }
+        return res;
+    }
+    {% endfor %}
+
+    private static class DbHelper extends SQLiteOpenHelper {
+        public DbHelper(Context context, String name, CursorFactory factory, int version) {
+            super(context, name, factory, version);
+        }
+
+        // Called when no database exists in disk and the helper class needs
+        // to create a new one. 
+        @Override
+        public void onCreate(SQLiteDatabase db) {      
+            {% for table in tables -%}
+            db.execSQL(DATABASE_{{ table.upper_name }}_CREATE);
+            {% endfor %}
+        }
+
+        // Called when there is a database version mismatch meaning that the version
+        // of the database on disk needs to be upgraded to the current version.
+        @Override
+        public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+            // Log the version upgrade.
+            Log.w(TAG, "Upgrading from version " + 
+                        oldVersion + " to " +
+                        newVersion + ", which will destroy all old data");
+            
+            // Upgrade the existing database to conform to the new version. Multiple 
+            // previous versions can be handled by comparing _oldVersion and _newVersion
+            // values.
+
+            // The simplest case is to drop the old table and create a new one.
+            {% for table in tables -%}
+            db.execSQL("DROP TABLE IF EXISTS " + {{ table.upper_name }}_TABLE + ";");
+            {% endfor %}
+            // Create a new one.
+            onCreate(db);
+        }
+    }
+}
+
+

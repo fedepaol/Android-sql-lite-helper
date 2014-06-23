@@ -57,42 +57,27 @@ Usage
 The usage is pretty simple. Provide the input file, the name of the class you want to create and the name of the package you want the class to belong to.
 
 
-    sql_lite_helper.py [-h] [-name NAME] [-i INFILE] [-db NAME] [-p PACKAGE] [-a AUTHORITY] [-d DBNAME] [-c CPROVIDER]
+    sql_lite_helper.py [-h] [-name NAME] [-f INFILE] [-p PACKAGE] [-a AUTHORITY] [-v DBVERSION]
 
-Generates sqlite helper or content provider. The name of content provider
-triggers the generation of the content provider as well
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -name NAME, --name NAME
-                        Name of the dbhelper class
-                        
-  -i INFILE, --infile INFILE
-                        file that contains classes definition
-                        
-  -db NAME, --dbhelper NAME
-                        name of the dbhelper class
-                        
-  -p PACKAGE, --package PACKAGE
-                        name of the package
-                        
-  -a AUTHORITY, --authority AUTHORITY
-                        name of the authority of the content provider
-                        
-  -d DBNAME, --dbname DBNAME
-                        name of the database file
-                        
-  -c CPROVIDER, --cprovider CPROVIDER
-                        to enable generation of content provider
-
+Generates a sqlite helper class, a content provider and a content provider client.
 
 ie:
->python sql_lite_helper.py -i sample.txt -n MyDbAdapter -p com.fede
+>python sql_lite_helper.py -f sample.txt -n SampleGenerate -p com.whiterabbit -a com.whiterabbit.provider
+
+
+Requirements
+-
+
+This script uses jinja2 template engine in order to generate the various files, so it must be installed in the current environment. 
+The best way to install it is through pip or easy_install. 
+If you have either one of them available on your machine, all you have to do is
+
+    pip install Jinja2
 
 or
 
->python sql_lite_helper.py -i sample.txt -p com.fede -a com.fede.dbprovider -c DroidContentProvider
-to generate the content provider as well
+    easy_install Jinja2
+
 
 ----
 

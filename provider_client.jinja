@@ -1,0 +1,95 @@
+/**********************************************************************************************************************************************************************
+****** AUTO GENERATED FILE BY ANDROID SQLITE HELPER SCRIPT BY FEDERICO PAOLINELLI. ANY CHANGE WILL BE WIPED OUT IF THE SCRIPT IS PROCESSED AGAIN. *******
+**********************************************************************************************************************************************************************/
+package {{ package }};
+
+
+import android.content.ContentResolver;
+import android.content.ContentUris;
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.Cursor;
+import android.net.Uri;
+
+import java.util.Date;
+
+public class {{ name }}ProviderClient{
+
+{% for table in tables %}
+    // ------------- {{ table.upper_name }}_HELPERS ------------
+    public static Uri add{{ table.name }} ( {%- for field in table.fields -%} 
+                                {{ field.type }} {{ field.name }}, 
+                                {% endfor -%} Context c) {
+        ContentValues contentValues = new ContentValues();
+        {% for field in table.fields -%}
+        {% if field.type == 'Date' -%}
+            contentValues.put({{ provider }}.{{ field.key_name }}, {{field.name}}.getTime());
+        {% else -%}
+            contentValues.put({{ provider }}.{{ field.key_name }}, {{field.name}});
+        {% endif %}
+        {%- endfor -%}
+        ContentResolver cr = c.getContentResolver();
+        return cr.insert({{ provider }}.{{ table.upper_name }}_URI, contentValues);
+    }
+
+    public static int remove{{ table.name }}(long rowIndex, Context c){
+        ContentResolver cr = c.getContentResolver();
+        Uri rowAddress = ContentUris.withAppendedId({{ provider }}.{{ table.upper_name }}_URI, rowIndex);
+        return cr.delete(rowAddress, null, null);
+    }
+
+    public static int removeAll{{ table.name }}(Context c){
+        ContentResolver cr = c.getContentResolver();
+        return cr.delete({{ provider }}.{{ table.upper_name }}_URI, null, null);
+    }
+
+    public static Cursor getAll{{ table.name }}(Context c){
+    	ContentResolver cr = c.getContentResolver();
+        String[] resultColumns = new String[] {
+                         {{ provider }}.ROW_ID,
+                         {% for field in table.fields -%} 
+                         {{ provider}}.{{ field.key_name }}{{ ',' if not loop.last }}
+                         {% endfor %}};
+
+        Cursor resultCursor = cr.query({{ provider }}.{{ table.upper_name }}_URI, resultColumns, null, null, null);
+        return resultCursor;
+    }
+
+    public static Cursor get{{ table.name }}(long rowId, Context c){
+    	ContentResolver cr = c.getContentResolver();
+        String[] resultColumns = new String[] {
+                         {{ provider }}.ROW_ID,
+                         {% for field in table.fields -%} 
+                         {{ provider }}.{{ field.key_name }}{{ ',' if not loop.last }}
+                         {% endfor %}};
+
+        Uri rowAddress = ContentUris.withAppendedId({{ provider }}.{{ table.upper_name }}_URI, rowId);
+        String where = null;    
+        String whereArgs[] = null;
+        String order = null;
+    
+        Cursor resultCursor = cr.query(rowAddress, resultColumns, where, whereArgs, order);
+        return resultCursor;
+    }
+
+    public static int update{{ table.name }} (int rowId, 
+                                   {% for field in table.fields -%}
+                                   {{ field.type }} {{ field.name }},
+                                   {% endfor -%} Context c) {
+        ContentValues contentValues = new ContentValues();
+        {% for field in table.fields -%}
+        {% if field.type == 'Date' -%}
+        contentValues.put({{ provider }}.{{ field.key_name }}, {{field.name}}.getTime());
+        {% else -%}
+        contentValues.put({{ provider }}.{{ field.key_name }}, {{field.name}});
+        {% endif %}
+        {%- endfor -%}
+        Uri rowAddress = ContentUris.withAppendedId({{ provider }}.{{ table.upper_name }}_URI, rowId);
+
+        ContentResolver cr = c.getContentResolver();
+        int updatedRowCount = cr.update(rowAddress, contentValues, null, null);
+        return updatedRowCount;
+    }
+    {% endfor %}
+}
+
