@@ -14,6 +14,8 @@
 
 import jinja2
 import argparse
+import os
+import errno
 
 content_type_id = 1
 
@@ -67,7 +69,7 @@ class ClassImplementer():
 
     def parse_file(self, file):
         for line in file:
-            line = line[:-1]
+            line = line.strip()
             fields = line.split()
 
             type = fields[0]
@@ -123,13 +125,13 @@ def parse_options():
 
 
 
-
-templateLoader = jinja2.FileSystemLoader( searchpath="./" )
+scriptPath = os.path.dirname(os.path.realpath(__file__))
+templateLoader = jinja2.FileSystemLoader(['./', scriptPath])
 templateEnv = jinja2.Environment( loader=templateLoader )
 
-SQL_TEMPLATE_FILE = "./sqllite.jinja"
-PROVIDER_CLIENT_TEMPLATE_FILE = "./provider_client.jinja"
-PROVIDER_TEMPLATE_FILE = "./provider.jinja"
+SQL_TEMPLATE_FILE = "sqllite.jinja"
+PROVIDER_CLIENT_TEMPLATE_FILE = "provider_client.jinja"
+PROVIDER_TEMPLATE_FILE = "provider.jinja"
 
 def write_from_template(target_file, template_name, helper, options):
     template = templateEnv.get_template(template_name)
@@ -147,15 +149,22 @@ if __name__ == '__main__':
     opt = parse_options()
     infile = open(opt.infile)
     helper = SqlLiteHelper(infile)
-    target_file = open('%s.java'%(opt.name + 'DbHelper'), 'w')
+    path = opt.package.replace('.', '/')
+    try:
+        os.makedirs(path)
+    except OSError as exc:
+        if exc.errno == errno.EEXIST:
+            pass
+    
+    target_file = open('%s/%s.java'%(path, opt.name + 'DbHelper'), 'w')
     write_from_template(target_file, SQL_TEMPLATE_FILE, helper, opt)
 
     provider_name = opt.name + 'Provider'
-    target_file = open('%s.java'%(provider_name), 'w')
+    target_file = open('%s/%s.java'%(path, provider_name), 'w')
     write_from_template(target_file, PROVIDER_TEMPLATE_FILE, helper, opt)
     target_file.close()
 
-    client_file = open('%sClient.java'%(provider_name), 'w')
+    client_file = open('%s/%sClient.java'%(path, provider_name), 'w')
     write_from_template(client_file, PROVIDER_CLIENT_TEMPLATE_FILE, helper, opt)
     target_file.close()
 
