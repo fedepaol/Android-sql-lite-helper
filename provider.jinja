@@ -69,7 +69,7 @@ public class {{ name }}Provider extends ContentProvider {
                                 ")";
     {% endfor %}
 
-    private DbHelper myOpenHelper;
+    protected DbHelper myOpenHelper;
 
     @Override
     public boolean onCreate() {
