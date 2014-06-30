@@ -23,8 +23,8 @@ import java.util.Date;
 public class {{ name }}Provider extends ContentProvider {
     private static final String TAG = "{{ name }}Provider";
 
-    private static final String DATABASE_NAME = "{{ name }}.db";
-    private static final int DATABASE_VERSION = {{ dbversion }};
+    protected static final String DATABASE_NAME = "{{ name }}.db";
+    protected static final int DATABASE_VERSION = {{ dbversion }};
 
     // --------------- URIS --------------------
     {% for table in tables -%}
@@ -229,7 +229,7 @@ public class {{ name }}Provider extends ContentProvider {
         return updateCount;
     }
 
-    private static class DbHelper extends SQLiteOpenHelper {
+    protected static class DbHelper extends SQLiteOpenHelper {
         public DbHelper(Context context, String name, CursorFactory factory, int version) {
             super(context, name, factory, version);
         }
